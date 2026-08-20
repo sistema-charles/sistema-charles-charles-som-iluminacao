@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charles Som e Iluminação - Sistema</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;color:#20242a}
+header{background:#111827;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:15px;position:sticky;top:0;z-index:5}
+.brand h1{margin:0;font-size:22px}.brand small{color:#cbd5e1}
+nav{display:flex;gap:8px;flex-wrap:wrap}nav button{background:#1f2937;color:#fff;border:1px solid #374151;padding:10px 13px;border-radius:8px;cursor:pointer}nav button.active,nav button:hover{background:#d4a72c;color:#111827}
+main{max-width:1250px;margin:24px auto;padding:0 18px}.page{display:none}.page.active{display:block}
+h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 10px #0000000d}.card .num{font-size:28px;font-weight:bold;margin-top:8px}.gold{color:#b48718}
+.form{background:#fff;padding:22px;border-radius:12px;box-shadow:0 2px 10px #0000000d;margin-bottom:20px}.fields{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.full{grid-column:1/-1}
+label{font-weight:bold;font-size:13px;display:block;margin-bottom:6px}input,select,textarea{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:7px;font-size:14px}textarea{min-height:90px;resize:vertical}
+.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}button.primary,.btn{border:0;border-radius:7px;padding:11px 16px;background:#111827;color:#fff;cursor:pointer}.btn.goldbtn{background:#d4a72c;color:#111827}.btn.red{background:#b91c1c}.btn.gray{background:#6b7280}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden}th,td{padding:11px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px}th{background:#f3f4f6}.tablewrap{overflow:auto}
+.badge{padding:4px 8px;border-radius:20px;background:#e5e7eb;font-size:11px}.ok{background:#dcfce7;color:#166534}.pending{background:#fef3c7;color:#92400e}
+.search{margin-bottom:12px}.empty{text-align:center;padding:30px;color:#6b7280}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:center;justify-content:center;padding:15px}.modal.show{display:flex}.modalbox{background:white;max-width:900px;width:100%;max-height:92vh;overflow:auto;border-radius:12px;padding:24px}.contract{font-family:Georgia,serif;line-height:1.65;color:#111;background:#fff}.contract h1{text-align:center;font-size:20px}.contract .center{text-align:center}.contract p{text-align:justify}.sign{display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-top:70px;text-align:center}.notice{background:#fffbeb;border:1px solid #f3d27a;padding:12px;border-radius:8px;margin-bottom:15px}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.fields{grid-template-columns:1fr}.full{grid-column:auto}.sign{grid-template-columns:1fr;gap:50px}}
+@media(max-width:550px){.grid{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}}
+@media print{header,nav,.no-print{display:none!important}.modal{position:static;background:none;padding:0}.modal.show{display:block}.modalbox{box-shadow:none;max-width:none;max-height:none}.contract{font-size:12pt}}
+
+/* ===== LOGIN SUPABASE ===== */
+#loginScreen{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#111827 0%,#1f2937 55%,#d4a72c 180%);display:flex;align-items:center;justify-content:center;padding:20px}
+#loginScreen.hidden{display:none}
+.login-card{width:100%;max-width:430px;background:#fff;border-radius:18px;padding:34px;box-shadow:0 25px 70px #0008}
+.login-brand{text-align:center;margin-bottom:25px}
+.login-logo{width:74px;height:74px;margin:0 auto 15px;border-radius:50%;background:#111827;color:#d4a72c;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;border:3px solid #d4a72c}
+.login-brand h1{margin:0;font-size:22px;color:#111827}
+.login-brand p{margin:6px 0 0;color:#6b7280;font-size:13px}
+.login-title{font-size:20px;margin:0 0 18px;text-align:center}
+.login-field{margin-bottom:15px}
+.login-field label{color:#374151}
+.password-wrap{position:relative}
+.password-wrap input{padding-right:45px}
+.toggle-pass{position:absolute;right:7px;top:50%;transform:translateY(-50%);border:0;background:transparent;cursor:pointer;font-size:18px;padding:7px;color:#6b7280}
+.login-btn{width:100%;border:0;border-radius:8px;padding:13px 16px;background:#d4a72c;color:#111827;font-weight:bold;cursor:pointer;font-size:15px}
+.login-btn:hover{background:#b98f22}
+.login-btn:disabled{opacity:.65;cursor:not-allowed}
+.login-links{text-align:center;margin-top:15px}
+.login-links button{border:0;background:none;color:#6b7280;cursor:pointer;text-decoration:underline;font-size:12px}
+.login-message{display:none;padding:10px 12px;border-radius:7px;margin-bottom:14px;font-size:13px}
+.login-message.show{display:block}
+.login-message.error{background:#fee2e2;color:#991b1b}
+.login-message.success{background:#dcfce7;color:#166534}
+.login-help{font-size:11px;color:#9ca3af;text-align:center;margin-top:18px;line-height:1.5}
+#appContent{display:none}
+#appContent.authenticated{display:block}
+.user-area{display:flex;align-items:center;gap:9px}
+.user-email{font-size:12px;color:#e5e7eb;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logout-btn{background:#b91c1c!important;border-color:#dc2626!important}
+@media(max-width:550px){.login-card{padding:25px 20px}.user-email{display:none}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-logo">CS</div>
+      <h1>CHARLES SOM E ILUMINAÇÃO</h1>
+      <p>Sistema de Prestação de Serviços</p>
+    </div>
+
+    <h2 class="login-title">Acesso ao Sistema</h2>
+
+    <div id="loginMessage" class="login-message"></div>
+
+    <form id="loginForm" onsubmit="entrarSistema(event)">
+      <div class="login-field">
+        <label for="loginEmail">E-mail</label>
+        <input id="loginEmail" type="email" autocomplete="username"
+               placeholder="Digite seu e-mail" required>
+      </div>
+
+      <div class="login-field">
+        <label for="loginPassword">Senha</label>
+        <div class="password-wrap">
+          <input id="loginPassword" type="password" autocomplete="current-password"
+                 placeholder="Digite sua senha" required>
+          <button type="button" class="toggle-pass" onclick="alternarSenha()" aria-label="Mostrar senha">👁</button>
+        </div>
+      </div>
+
+      <button id="loginButton" class="login-btn" type="submit">ENTRAR NO SISTEMA</button>
+    </form>
+
+    <div class="login-links">
+      <button type="button" onclick="recuperarSenha()">Esqueci minha senha</button>
+    </div>
+
+    <div class="login-help">
+      O acesso é protegido pelo Supabase Authentication.<br>
+      Use um usuário previamente cadastrado no projeto Supabase.
+    </div>
+<div class="login-help" style="margin-top:12px">
+  <details>
+    <summary style="cursor:pointer;font-weight:bold;color:#6b7280">Configuração do banco Supabase</summary>
+    <p>Crie as tabelas <b>clientes</b> e <b>locacoes</b> no SQL Editor do Supabase e habilite RLS conforme as instruções do projeto.</p>
+  </details>
+</div>
+
+  </div>
+</div>
+
+<div id="appContent">
+
+<header>
+<div class="brand"><h1>CHARLES SOM E ILUMINAÇÃO</h1><small>Sistema de Prestação de Serviços</small></div>
+<nav>
+<button class="active" onclick="showPage('dashboard',this)">Dashboard</button>
+<button onclick="showPage('clientes',this)">Clientes</button>
+<button onclick="showPage('locacoes',this)">Locações</button>
+<button onclick="showPage('agenda',this)">Agenda</button>
+<button onclick="showPage('contratos',this)">Contratos</button>
+</nav>
+<div class="user-area">
+  <span class="user-email" id="loggedUserEmail"></span>
+  <button class="logout-btn" onclick="sairSistema()">Sair</button>
+</div>
+</header>
+
+<main>
+<section id="dashboard" class="page active">
+<h2>Dashboard</h2>
+<div class="grid">
+<div class="card">Clientes<div class="num" id="dashClientes">0</div></div>
+<div class="card">Serviços contratados<div class="num" id="dashServicos">0</div></div>
+<div class="card">Total contratado<div class="num gold" id="dashTotal">R$ 0,00</div></div>
+<div class="card">Valores em aberto<div class="num" id="dashAberto">R$ 0,00</div></div>
+</div>
+<div class="form" style="margin-top:20px"><h3>Próximos eventos</h3><div id="dashEventos"></div></div>
+</section>
+
+<section id="clientes" class="page">
+<h2>Clientes</h2>
+<div class="form">
+<div class="fields">
+<div><label>Nome / Razão Social *</label><input id="cNome"></div>
+<div><label>Tipo *</label><select id="cTipo" onchange="toggleDoc()"><option value="PF">Pessoa Física</option><option value="PJ">Pessoa Jurídica</option></select></div>
+<div id="cpfBox"><label>CPF *</label><input id="cDoc" placeholder="000.000.000-00"></div>
+<div id="cnpjBox" style="display:none"><label>CNPJ *</label><input id="cDocPJ" placeholder="00.000.000/0000-00"></div>
+<div><label>Endereço</label><input id="cEndereco"></div>
+<div><label>Número</label><input id="cNumero"></div>
+<div><label>Bairro</label><input id="cBairro"></div>
+<div><label>Cidade</label><input id="cCidade"></div>
+<div><label>Contato / WhatsApp</label><input id="cContato"></div>
+<div><label>E-mail</label><input id="cEmail"></div>
+<div class="full"><label>Observações</label><textarea id="cObs"></textarea></div>
+</div>
+<div class="actions"><button class="btn goldbtn" onclick="salvarCliente()">Salvar cliente</button><button class="btn gray" onclick="limparCliente()">Limpar</button></div>
+</div>
+<input class="search" id="buscaCliente" oninput="renderClientes()" placeholder="Pesquisar cliente...">
+<div class="tablewrap"><table><thead><tr><th>Cliente</th><th>Tipo</th><th>CPF/CNPJ</th><th>Contato</th><th>Cidade</th><th>Ações</th></tr></thead><tbody id="clientesTable"></tbody></table></div>
+</section>
+
+<section id="locacoes" class="page">
+<h2>Locações / Serviços</h2>
+<div class="form">
+<div class="fields">
+<div><label>Cliente *</label><select id="lCliente" onchange="preencherCliente()"><option value="">Selecione...</option></select></div>
+<div><label>CPF/CNPJ</label><input id="lDoc" readonly></div>
+<div class="full"><label>Descrição do serviço *</label><textarea id="lDescricao" placeholder="Ex.: Sonorização e iluminação para casamento..."></textarea></div>
+<div><label>Data da contratação</label><input type="date" id="lContratacao"></div>
+<div><label>Data do evento *</label><input type="date" id="lEvento"></div>
+<div><label>Horário de início</label><input type="time" id="lInicio"></div>
+<div><label>Horário de término</label><input type="time" id="lFim"></div>
+<div><label>Local do evento *</label><input id="lLocal"></div>
+<div><label>Valor da prestação *</label><input id="lValor" type="number" step="0.01" min="0"></div>
+<div><label>Valor da entrada</label><input id="lEntrada" type="number" step="0.01" min="0" value="0"></div>
+<div><label>Forma de pagamento</label><select id="lPagamento"><option>Pix</option><option>Dinheiro</option><option>Transferência</option><option>Cartão</option><option>Outro</option></select></div>
+<div><label>Status</label><select id="lStatus"><option>Confirmado</option><option>Pendente</option><option>Concluído</option><option>Cancelado</option></select></div>
+<div class="full"><label>Observações</label><textarea id="lObs"></textarea></div>
+</div>
+<div class="actions"><button class="btn goldbtn" onclick="salvarLocacao()">Salvar serviço</button><button class="btn gray" onclick="limparLocacao()">Limpar</button></div>
+</div>
+<div class="tablewrap"><table><thead><tr><th>Evento</th><th>Cliente</th><th>Descrição</th><th>Local</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody id="locacoesTable"></tbody></table></div>
+</section>
+
+<section id="agenda" class="page">
+<h2>Agenda de Eventos</h2>
+<div class="form"><div class="fields"><div><label>Filtrar por data</label><input type="date" id="agendaData" onchange="renderAgenda()"></div><div><label>Pesquisar</label><input id="agendaBusca" oninput="renderAgenda()" placeholder="Cliente ou local"></div></div></div>
+<div class="tablewrap"><table><thead><tr><th>Data</th><th>Horário</th><th>Cliente</th><th>Evento/Serviço</th><th>Local</th><th>Valor</th><th>Status</th></tr></thead><tbody id="agendaTable"></tbody></table></div>
+</section>
+
+<section id="contratos" class="page">
+<h2>Contratos</h2>
+<div class="form">
+<div class="notice">Selecione um serviço abaixo para gerar automaticamente o contrato com os dados do cliente e do evento.</div>
+<select id="contratoLocacao"></select>
+<div class="actions"><button class="btn goldbtn" onclick="gerarContratoSelecionado()">📄 Gerar contrato</button></div>
+</div>
+<div class="tablewrap"><table><thead><tr><th>Data</th><th>Cliente</th><th>Evento</th><th>Valor</th><th>Ação</th></tr></thead><tbody id="contratosTable"></tbody></table></div>
+</section>
+</main>
+
+<div class="modal" id="modal">
+<div class="modalbox">
+<div class="no-print actions" style="justify-content:flex-end"><button class="btn goldbtn" onclick="window.print()">🖨 Imprimir / Salvar PDF</button><button class="btn gray" onclick="fecharModal()">Fechar</button></div>
+<div id="contractContent"></div>
+</div>
+</div>
+
+</div>
+
+<script>
+/* =========================================================
+   SUPABASE AUTHENTICATION
+   IMPORTANTE:
+   - Substitua SUPABASE_URL pela URL do seu projeto.
+   - Substitua SUPABASE_PUBLISHABLE_KEY pela Publishable Key
+     do seu projeto Supabase.
+   - NUNCA coloque a service_role/secret key neste arquivo.
+   ========================================================= */
+const SUPABASE_URL = 'https://pmgbvthsbjpajwxonopb.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_M8WXpVOJsfLfEvYBBkINKg_aHSOIsgl';
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  }
+);
+
+const KEYC='charles_clientes_v1', KEYL='charles_locacoes_v1';
+let clientes=JSON.parse(localStorage.getItem(KEYC)||'[]'),
+    locacoes=JSON.parse(localStorage.getItem(KEYL)||'[]'),
+    editCliente=null,
+    dadosSupabaseDisponiveis=false;
+
+
+function mostrarLogin(mensagem='', tipo='error'){
+  const box=document.getElementById('loginMessage');
+  box.textContent=mensagem;
+  box.className='login-message'+(mensagem?' show ':'')+(tipo?' '+tipo:'');
+}
+
+function alternarSenha(){
+  const input=document.getElementById('loginPassword');
+  const btn=document.querySelector('.toggle-pass');
+  if(input.type==='password'){
+    input.type='text';
+    btn.textContent='🙈';
+  }else{
+    input.type='password';
+    btn.textContent='👁';
+  }
+}
+
+async function entrarSistema(event){
+  event.preventDefault();
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const button=document.getElementById('loginButton');
+
+  if(!email || !password){
+    mostrarLogin('Informe seu e-mail e sua senha.');
+    return;
+  }
+
+  button.disabled=true;
+  button.textContent='ENTRANDO...';
+  mostrarLogin('');
+
+  const {data,error}=await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    console.error('Erro de autenticação:',error);
+    mostrarLogin('Não foi possível entrar. Verifique o e-mail e a senha.');
+    button.disabled=false;
+    button.textContent='ENTRAR NO SISTEMA';
+    return;
+  }
+
+  abrirSistema(data.user);
+  button.disabled=false;
+  button.textContent='ENTRAR NO SISTEMA';
+}
+
+async function recuperarSenha(){
+  const email=document.getElementById('loginEmail').value.trim();
+
+  if(!email){
+    mostrarLogin('Digite seu e-mail para receber o link de recuperação.');
+    document.getElementById('loginEmail').focus();
+    return;
+  }
+
+  const redirectTo=window.location.origin+window.location.pathname;
+
+  const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{
+    redirectTo
+  });
+
+  if(error){
+    console.error('Erro ao solicitar recuperação:',error);
+    mostrarLogin('Não foi possível solicitar a recuperação da senha.');
+    return;
+  }
+
+  mostrarLogin('Se o e-mail estiver cadastrado, você receberá as instruções para redefinir a senha.','success');
+}
+
+async function abrirSistema(user){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appContent').classList.add('authenticated');
+  document.getElementById('loggedUserEmail').textContent=user?.email||'';
+  document.getElementById('loginForm').reset();
+  registrarAtividade();
+  await carregarDadosSupabase();
+  updateAll();
+}
+
+function fecharSistema(){
+  clearTimeout(inactivityTimer);
+  inactivityTimer=null;
+  document.getElementById('appContent').classList.remove('authenticated');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loggedUserEmail').textContent='';
+  mostrarLogin('');
+}
+
+async function sairSistema(){
+  const {error}=await supabaseClient.auth.signOut();
+  if(error){
+    alert('Não foi possível sair do sistema. Tente novamente.');
+    return;
+  }
+  fecharSistema();
+}
+
+if(
+  SUPABASE_URL.includes('COLE_AQUI') ||
+  SUPABASE_PUBLISHABLE_KEY.includes('COLE_AQUI')
+){
+  console.warn('Configure SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY antes de usar o login.');
+}
+
+
+/* =========================================================
+   LOGOUT AUTOMÁTICO POR INATIVIDADE
+   Após 5 minutos sem atividade, a sessão é encerrada
+   e o usuário retorna à tela de login.
+   ========================================================= */
+const INACTIVITY_LIMIT = 5 * 60 * 1000;
+let inactivityTimer = null;
+
+function registrarAtividade(){
+  const app=document.getElementById('appContent');
+  if(!app.classList.contains('authenticated')) return;
+
+  clearTimeout(inactivityTimer);
+  inactivityTimer=setTimeout(expirarPorInatividade,INACTIVITY_LIMIT);
+}
+
+async function expirarPorInatividade(){
+  clearTimeout(inactivityTimer);
+  inactivityTimer=null;
+
+  const {error}=await supabaseClient.auth.signOut();
+
+  if(error){
+    console.error('Erro ao encerrar sessão por inatividade:',error);
+  }
+
+  fecharSistema();
+  mostrarLogin('Sua sessão foi encerrada após 5 minutos sem atividade.','success');
+}
+
+function iniciarControleInatividade(){
+  const eventos=['mousemove','mousedown','keydown','scroll','touchstart','click'];
+
+  eventos.forEach(evento=>{
+    document.addEventListener(evento,registrarAtividade,{passive:true});
+  });
+
+  registrarAtividade();
+}
+
+async function verificarSessao(){
+  const {data,error}=await supabaseClient.auth.getSession();
+
+  if(error){
+    console.error('Erro ao verificar sessão:',error);
+    fecharSistema();
+    return;
+  }
+
+  if(data.session?.user){
+    abrirSistema(data.session.user);
+  }else{
+    fecharSistema();
+  }
+}
+
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+  if(session?.user){
+    abrirSistema(session.user);
+  }else if(event==='SIGNED_OUT'){
+    fecharSistema();
+  }
+});
+
+const brl=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v||0));
+const dateBR=d=>d?new Date(d+'T00:00:00').toLocaleDateString('pt-BR'):'';
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+function save(){
+  localStorage.setItem(KEYC,JSON.stringify(clientes));
+  localStorage.setItem(KEYL,JSON.stringify(locacoes));
+  updateAll();
+}
+
+function normalizarClienteSupabase(row){
+  return {
+    id:row.id,
+    nome:row.nome,
+    tipo:row.tipo,
+    doc:row.cpf_cnpj||'',
+    endereco:row.endereco||'',
+    numero:row.numero||'',
+    bairro:row.bairro||'',
+    cidade:row.cidade||'',
+    contato:row.contato||'',
+    email:row.email||'',
+    obs:row.observacoes||''
+  };
+}
+
+function normalizarLocacaoSupabase(row){
+  return {
+    id:row.id,
+    clienteId:row.cliente_id,
+    descricao:row.descricao||'',
+    contratacao:row.data_contratacao||'',
+    evento:row.data_evento||'',
+    inicio:row.hora_inicio||'',
+    fim:row.hora_fim||'',
+    local:row.local||'',
+    valor:Number(row.valor||0),
+    entrada:Number(row.entrada||0),
+    pagamento:row.forma_pagamento||'Pix',
+    status:row.status||'Confirmado',
+    obs:row.observacoes||''
+  };
+}
+
+async function carregarDadosSupabase(){
+  const {data:userData,error:userError}=await supabaseClient.auth.getUser();
+  if(userError || !userData?.user){
+    console.warn('Usuário não autenticado para carregar dados.');
+    return false;
+  }
+
+  const {data:clientesDB,error:clientesError}=await supabaseClient
+    .from('clientes')
+    .select('*')
+    .order('nome',{ascending:true});
+
+  if(clientesError){
+    console.warn('Não foi possível carregar a tabela clientes. Verifique se ela foi criada no Supabase.',clientesError);
+    return false;
+  }
+
+  const {data:locacoesDB,error:locacoesError}=await supabaseClient
+    .from('locacoes')
+    .select('*')
+    .order('data_evento',{ascending:true});
+
+  if(locacoesError){
+    console.warn('Não foi possível carregar a tabela locacoes. Verifique se ela foi criada no Supabase.',locacoesError);
+    return false;
+  }
+
+  clientes=(clientesDB||[]).map(normalizarClienteSupabase);
+  locacoes=(locacoesDB||[]).map(normalizarLocacaoSupabase);
+  dadosSupabaseDisponiveis=true;
+  save();
+  return true;
+}
+
+async function inserirClienteSupabase(obj){
+  if(!dadosSupabaseDisponiveis)return true;
+
+  const {data,error}=await supabaseClient.from('clientes').insert({
+    id:obj.id,
+    nome:obj.nome,
+    tipo:obj.tipo,
+    cpf_cnpj:obj.doc,
+    endereco:obj.endereco,
+    numero:obj.numero,
+    bairro:obj.bairro,
+    cidade:obj.cidade,
+    contato:obj.contato,
+    email:obj.email,
+    observacoes:obj.obs
+  }).select().single();
+
+  if(error){
+    console.error('Erro ao salvar cliente no Supabase:',error);
+    alert('Não foi possível salvar o cliente no banco Supabase. Verifique as tabelas e as políticas RLS.');
+    return false;
+  }
+  return !!data;
+}
+
+async function atualizarClienteSupabase(obj){
+  if(!dadosSupabaseDisponiveis)return true;
+
+  const {error}=await supabaseClient.from('clientes').update({
+    nome:obj.nome,
+    tipo:obj.tipo,
+    cpf_cnpj:obj.doc,
+    endereco:obj.endereco,
+    numero:obj.numero,
+    bairro:obj.bairro,
+    cidade:obj.cidade,
+    contato:obj.contato,
+    email:obj.email,
+    observacoes:obj.obs
+  }).eq('id',obj.id);
+
+  if(error){
+    console.error('Erro ao atualizar cliente no Supabase:',error);
+    alert('Não foi possível atualizar o cliente no banco Supabase.');
+    return false;
+  }
+  return true;
+}
+
+async function excluirClienteSupabase(id){
+  if(!dadosSupabaseDisponiveis)return true;
+  const {error}=await supabaseClient.from('clientes').delete().eq('id',id);
+  if(error){
+    console.error('Erro ao excluir cliente no Supabase:',error);
+    alert('Não foi possível excluir o cliente no banco Supabase.');
+    return false;
+  }
+  return true;
+}
+
+async function inserirLocacaoSupabase(obj){
+  if(!dadosSupabaseDisponiveis)return true;
+
+  const {data,error}=await supabaseClient.from('locacoes').insert({
+    id:obj.id,
+    cliente_id:obj.clienteId,
+    descricao:obj.descricao,
+    data_contratacao:obj.contratacao,
+    data_evento:obj.evento,
+    hora_inicio:obj.inicio||null,
+    hora_fim:obj.fim||null,
+    local:obj.local,
+    valor:obj.valor,
+    entrada:obj.entrada,
+    forma_pagamento:obj.pagamento,
+    status:obj.status,
+    observacoes:obj.obs
+  }).select().single();
+
+  if(error){
+    console.error('Erro ao salvar locação no Supabase:',error);
+    alert('Não foi possível salvar o serviço no banco Supabase. Verifique as tabelas e as políticas RLS.');
+    return false;
+  }
+  return !!data;
+}
+
+async function excluirLocacaoSupabase(id){
+  if(!dadosSupabaseDisponiveis)return true;
+  const {error}=await supabaseClient.from('locacoes').delete().eq('id',id);
+  if(error){
+    console.error('Erro ao excluir locação no Supabase:',error);
+    alert('Não foi possível excluir o serviço no banco Supabase.');
+    return false;
+  }
+  return true;
+}
+function showPage(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');updateAll()}
+function toggleDoc(){let pj=cTipo.value==='PJ';cpfBox.style.display=pj?'none':'block';cnpjBox.style.display=pj?'block':'none'}
+function limparCliente(){['cNome','cDoc','cDocPJ','cEndereco','cNumero','cBairro','cCidade','cContato','cEmail','cObs'].forEach(id=>document.getElementById(id).value='');editCliente=null}
+async function salvarCliente(){
+let pj=cTipo.value==='PJ', nome=cNome.value.trim(), doc=(pj?cDocPJ.value:cDoc.value).trim();
+if(!nome||!doc)return alert('Informe nome/razão social e CPF/CNPJ.');
+let obj={id:editCliente||crypto.randomUUID(),nome,tipo:cTipo.value,doc,endereco:cEndereco.value,numero:cNumero.value,bairro:cBairro.value,cidade:cCidade.value,contato:cContato.value,email:cEmail.value,obs:cObs.value};
+let ok=editCliente?await atualizarClienteSupabase(obj):await inserirClienteSupabase(obj);
+if(!ok)return;
+if(editCliente){let i=clientes.findIndex(x=>x.id===editCliente);clientes[i]=obj}else clientes.push(obj);
+limparCliente();save();alert('Cliente salvo com sucesso!')
+}
+function editarCliente(id){let c=clientes.find(x=>x.id===id);editCliente=id;cNome.value=c.nome;cTipo.value=c.tipo;toggleDoc();(c.tipo==='PJ'?cDocPJ:cDoc).value=c.doc;cEndereco.value=c.endereco;cNumero.value=c.numero;cBairro.value=c.bairro;cCidade.value=c.cidade;cContato.value=c.contato;cEmail.value=c.email;cObs.value=c.obs;showPage('clientes',document.querySelector('nav button:nth-child(2)'));window.scrollTo({top:0,behavior:'smooth'})}
+async function excluirCliente(id){
+if(locacoes.some(l=>l.clienteId===id))return alert('Este cliente possui serviços cadastrados. Exclua ou altere os serviços primeiro.');
+if(!confirm('Excluir cliente?'))return;
+if(!(await excluirClienteSupabase(id)))return;
+clientes=clientes.filter(x=>x.id!==id);save();
+}
+function renderClientes(){let q=(buscaCliente.value||'').toLowerCase();clientesTable.innerHTML=clientes.filter(c=>(c.nome+' '+c.doc+' '+c.cidade).toLowerCase().includes(q)).map(c=>`<tr><td><b>${esc(c.nome)}</b></td><td>${c.tipo==='PJ'?'Pessoa Jurídica':'Pessoa Física'}</td><td>${esc(c.doc)}</td><td>${esc(c.contato)}</td><td>${esc(c.cidade)}</td><td><button class="btn" onclick="editarCliente('${c.id}')">Editar</button> <button class="btn red" onclick="excluirCliente('${c.id}')">Excluir</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Nenhum cliente cadastrado.</td></tr>'}
+function preencherClientes(){lCliente.innerHTML='<option value="">Selecione...</option>'+clientes.map(c=>`<option value="${c.id}">${esc(c.nome)} - ${esc(c.doc)}</option>`).join('')}
+function preencherCliente(){let c=clientes.find(x=>x.id===lCliente.value);lDoc.value=c?.doc||''}
+function limparLocacao(){['lDescricao','lEvento','lInicio','lFim','lLocal','lValor','lEntrada','lObs','lDoc'].forEach(id=>document.getElementById(id).value='');lCliente.value='';lStatus.value='Confirmado';lContratacao.value=new Date().toISOString().slice(0,10)}
+async function salvarLocacao(){
+let c=clientes.find(x=>x.id===lCliente.value);if(!c||!lDescricao.value.trim()||!lEvento.value||!lLocal.value||!lValor.value)return alert('Preencha cliente, descrição, data do evento, local e valor.');
+let entrada=Number(lEntrada.value||0),valor=Number(lValor.value);let obj={id:crypto.randomUUID(),clienteId:c.id,descricao:lDescricao.value,contratacao:lContratacao.value||new Date().toISOString().slice(0,10),evento:lEvento.value,inicio:lInicio.value,fim:lFim.value,local:lLocal.value,valor,entrada,pagamento:lPagamento.value,status:lStatus.value,obs:lObs.value};
+if(!(await inserirLocacaoSupabase(obj)))return;
+locacoes.push(obj);save();limparLocacao();alert('Serviço cadastrado com sucesso!')
+}
+function cliente(id){return clientes.find(c=>c.id===id)||{}}
+function renderLocacoes(){locacoesTable.innerHTML=locacoes.slice().sort((a,b)=>a.evento.localeCompare(b.evento)).map(l=>{let c=cliente(l.clienteId);return `<tr><td>${dateBR(l.evento)}</td><td>${esc(c.nome)}</td><td>${esc(l.descricao)}</td><td>${esc(l.local)}</td><td>${brl(l.valor)}</td><td><span class="badge ${l.status==='Confirmado'||l.status==='Concluído'?'ok':'pending'}">${esc(l.status)}</span></td><td><button class="btn goldbtn" onclick="gerarContrato('${l.id}')">Contrato</button> <button class="btn red" onclick="excluirLocacao('${l.id}')">Excluir</button></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Nenhum serviço cadastrado.</td></tr>'}
+async function excluirLocacao(id){
+if(!confirm('Excluir este serviço?'))return;
+if(!(await excluirLocacaoSupabase(id)))return;
+locacoes=locacoes.filter(x=>x.id!==id);save();
+}
+function renderAgenda(){let d=agendaData.value,q=(agendaBusca.value||'').toLowerCase();agendaTable.innerHTML=locacoes.slice().sort((a,b)=>a.evento.localeCompare(b.evento)).filter(l=>(!d||l.evento===d)&&((cliente(l.clienteId).nome+' '+l.local+' '+l.descricao).toLowerCase().includes(q))).map(l=>`<tr><td>${dateBR(l.evento)}</td><td>${esc(l.inicio||'')} ${l.fim?'às '+esc(l.fim):''}</td><td>${esc(cliente(l.clienteId).nome)}</td><td>${esc(l.descricao)}</td><td>${esc(l.local)}</td><td>${brl(l.valor)}</td><td><span class="badge">${esc(l.status)}</span></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum evento encontrado.</td></tr>'}
+function preencherContratos(){contratoLocacao.innerHTML='<option value="">Selecione um serviço...</option>'+locacoes.map(l=>`<option value="${l.id}">${dateBR(l.evento)} - ${esc(cliente(l.clienteId).nome)} - ${esc(l.local)}</option>`).join('')}
+function renderContratos(){contratosTable.innerHTML=locacoes.slice().sort((a,b)=>b.evento.localeCompare(a.evento)).map(l=>`<tr><td>${dateBR(l.evento)}</td><td>${esc(cliente(l.clienteId).nome)}</td><td>${esc(l.descricao)}</td><td>${brl(l.valor)}</td><td><button class="btn goldbtn" onclick="gerarContrato('${l.id}')">Gerar contrato</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum contrato disponível.</td></tr>'}
+function gerarContratoSelecionado(){if(!contratoLocacao.value)return alert('Selecione um serviço.');gerarContrato(contratoLocacao.value)}
+function gerarContrato(id){
+let l=locacoes.find(x=>x.id===id),c=cliente(l.clienteId);if(!l||!c)return;
+let endereco=[c.endereco,c.numero?'nº '+c.numero:'',c.bairro,c.cidade].filter(Boolean).join(', ');
+let tipo=c.tipo==='PJ'?'CNPJ':'CPF';
+contractContent.innerHTML=`<div class="contract">
+<h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE SONORIZAÇÃO E ILUMINAÇÃO</h1>
+<p class="center"><b>CHARLES SOM E ILUMINAÇÃO</b></p>
+<p>Pelo presente instrumento particular, de um lado <b>CHARLES SOM E ILUMINAÇÃO</b>, doravante denominada <b>CONTRATADA</b>, e, de outro lado, <b>${esc(c.nome)}</b>, ${tipo} nº <b>${esc(c.doc)}</b>, ${endereco?'com endereço em '+esc(endereco)+'.':''} doravante denominado(a) <b>CONTRATANTE</b>, têm entre si justo e contratado o presente Contrato de Prestação de Serviços, mediante as cláusulas seguintes:</p>
+<p><b>CLÁUSULA 1ª – DO OBJETO</b></p>
+<p>A CONTRATADA prestará ao CONTRATANTE serviços de sonorização e iluminação, conforme a descrição: <b>${esc(l.descricao)}</b>.</p>
+<p><b>CLÁUSULA 2ª – DATA E LOCAL</b></p>
+<p>O evento será realizado no dia <b>${dateBR(l.evento)}</b>${l.inicio?' às <b>'+esc(l.inicio)+'</b>':''}${l.fim?' até <b>'+esc(l.fim)+'</b>':''}, no local <b>${esc(l.local)}</b>.</p>
+<p><b>CLÁUSULA 3ª – VALOR E PAGAMENTO</b></p>
+<p>Pela prestação dos serviços, o CONTRATANTE pagará à CONTRATADA o valor total de <b>${brl(l.valor)}</b>. Entrada registrada: <b>${brl(l.entrada)}</b>. Saldo: <b>${brl(Math.max(0,l.valor-l.entrada))}</b>. Forma de pagamento: <b>${esc(l.pagamento)}</b>.</p>
+<p><b>CLÁUSULA 4ª – RESPONSABILIDADES</b></p>
+<p>A CONTRATADA compromete-se a disponibilizar os equipamentos e a equipe necessários aos serviços contratados, observadas as condições previamente ajustadas. O CONTRATANTE deverá fornecer acesso e condições adequadas para montagem, funcionamento e desmontagem dos equipamentos.</p>
+<p><b>CLÁUSULA 5ª – CANCELAMENTO E ALTERAÇÕES</b></p>
+<p>Eventuais alterações de data, horário, local ou serviços deverão ser comunicadas e dependerão de disponibilidade da CONTRATADA e de novo ajuste entre as partes. Condições específicas de cancelamento poderão ser registradas nas observações da contratação.</p>
+<p><b>CLÁUSULA 6ª – DISPOSIÇÕES GERAIS</b></p>
+<p>As partes declaram estar de acordo com as condições deste instrumento. ${l.obs?'Observações: '+esc(l.obs):''}</p>
+<p>E, por estarem de acordo, firmam o presente contrato.</p>
+<p>Data da contratação: <b>${dateBR(l.contratacao)}</b>.</p>
+<div class="sign"><div>__________________________________<br><b>${esc(c.nome)}</b><br>CONTRATANTE</div><div>__________________________________<br><b>CHARLES SOM E ILUMINAÇÃO</b><br>CONTRATADA</div></div>
+</div>`;
+modal.classList.add('show')
+}
+function fecharModal(){modal.classList.remove('show')}
+function updateAll(){
+renderClientes();preencherClientes();renderLocacoes();renderAgenda();preencherContratos();renderContratos();
+dashClientes.textContent=clientes.length;dashServicos.textContent=locacoes.length;dashTotal.textContent=brl(locacoes.reduce((s,l)=>s+Number(l.valor||0),0));dashAberto.textContent=brl(locacoes.reduce((s,l)=>s+Math.max(0,Number(l.valor||0)-Number(l.entrada||0)),0));
+let hoje=new Date().toISOString().slice(0,10);let ev=locacoes.filter(l=>l.evento>=hoje).sort((a,b)=>a.evento.localeCompare(b.evento)).slice(0,8);
+dashEventos.innerHTML=ev.map(l=>`<div style="padding:10px 0;border-bottom:1px solid #eee"><b>${dateBR(l.evento)}</b> — ${esc(cliente(l.clienteId).nome)} — ${esc(l.local)} — ${brl(l.valor)}</div>`).join('')||'<div class="empty">Nenhum próximo evento.</div>';
+}
+lContratacao.value=new Date().toISOString().slice(0,10);updateAll(); iniciarControleInatividade(); verificarSessao();
+</script>
+</body>
+</html>
